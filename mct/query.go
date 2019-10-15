@@ -1,17 +1,24 @@
 package mct
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+	"github.com/just1689/tracing"
+	"time"
+)
 
-func QueryDate(db *sql.DB) (count int, err error) {
-	rows, err := db.Query("SELECT NOW()", nil)
+func QueryDateTraced(db *sql.DB, traceId string) (count int, err error) {
+	rows, err := db.Query("SELECT NOW()")
 	if err != nil {
-		//trace
+		time.Sleep(100 * time.Millisecond)
+		tracing.GlobalPublisher.Enqueue(tracing.NewSpan(traceId, ServiceName, fmt.Sprint("Could use db: ", err.Error()), 100*time.Millisecond))
 		return
 	}
 	count = 0
 	for rows.Next() {
 		count++
 	}
-	//trace
+	time.Sleep(100 * time.Millisecond)
+	tracing.GlobalPublisher.Enqueue(tracing.NewSpan(traceId, ServiceName, fmt.Sprint("Got date!"), 100*time.Millisecond))
 	return
 }
